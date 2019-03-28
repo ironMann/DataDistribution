@@ -12,14 +12,13 @@
 #define ALICEO2_SUBTIMEFRAME_BUILDER_H_
 
 #include "SubTimeFrameDataModel.h"
+#include "MemoryUtils.h"
 
-#include <Headers/DataHeader.h>
 #include <vector>
 #include <mutex>
 
 class FairMQDevice;
 class FairMQChannel;
-class FairMQUnmanagedRegion;
 
 namespace o2
 {
@@ -34,7 +33,7 @@ class SubTimeFrameReadoutBuilder : public ISubTimeFrameVisitor
 {
  public:
   SubTimeFrameReadoutBuilder() = delete;
-  SubTimeFrameReadoutBuilder(FairMQDevice &pDev, FairMQChannel& pChan);
+  SubTimeFrameReadoutBuilder(FairMQDevice &pDev, FairMQChannel& pChan, bool pDplEnabled);
 
   void addHbFrames(const ReadoutSubTimeframeHeader& pHdr, std::vector<FairMQMessagePtr>&& pHbFrames);
   std::unique_ptr<SubTimeFrame> getStf();
@@ -44,20 +43,14 @@ class SubTimeFrameReadoutBuilder : public ISubTimeFrameVisitor
 
  private:
 
-  FairMQMessagePtr allocateHeader();
-
-  std::unique_ptr<FairMQUnmanagedRegion> mHeaderRegion;
-  void reclaimHeader(o2::header::DataHeader* pData, size_t pSize);
-
-  std::vector<o2::header::DataHeader*> mHeaders;
-  std::mutex mHeaderLock;
-  // two step reclaim to avoid lock contention in the allocation path
-  std::vector<o2::header::DataHeader*> mReclaimedHeaders;
-
   std::unique_ptr<SubTimeFrame> mStf;
 
   FairMQDevice& mDevice;
   FairMQChannel& mChan;
+  bool mDplEnabled;
+
+  std::unique_ptr<FMQUnsynchronizedPoolMemoryResource> mHeaderMemRes;
+
 };
 
 }

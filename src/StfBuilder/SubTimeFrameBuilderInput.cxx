@@ -54,7 +54,7 @@ void StfInputInterface::DataHandlerThread(const unsigned pInputChannelIdx)
   auto& lOutputChan = mDevice.GetChannel(mDevice.getOutputChannelName());
 
   // Stf builder
-  SubTimeFrameReadoutBuilder lStfBuilder(mDevice, lOutputChan);
+  SubTimeFrameReadoutBuilder lStfBuilder(mDevice, lOutputChan, mDevice.dplEnabled());
 
   using hres_clock = std::chrono::high_resolution_clock;
   auto lStfStartTime = hres_clock::now();
