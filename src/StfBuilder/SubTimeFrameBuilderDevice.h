@@ -77,6 +77,7 @@ class StfBuilderDevice : public DataDistDevice,
   const std::string& getDplChannelName() const { return mDplChannelName; }
 
   bool guiEnabled() const noexcept { return mBuildHistograms; }
+  bool dplEnabled() const noexcept { return mDplEnabled; }
 
  protected:
   void PreRun() final;
