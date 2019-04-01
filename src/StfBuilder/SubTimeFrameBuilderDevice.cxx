@@ -58,7 +58,7 @@ void StfBuilderDevice::InitTask()
   mStandalone = GetConfig()->GetValue<bool>(OptionKeyStandalone);
   mMaxStfsInPipeline = GetConfig()->GetValue<std::int64_t>(OptionKeyMaxBufferedStfs);
   mBuildHistograms = GetConfig()->GetValue<bool>(OptionKeyGui);
-  mDplEnabled = GetConfig()->GetValue<bool>(OptionKeyDpl);
+
 
   // Buffering limitation
   if (mMaxStfsInPipeline > 0) {
@@ -86,6 +86,9 @@ void StfBuilderDevice::InitTask()
     LOG(WARNING) << "Running in standalone mode and with STF file sink disabled. "
                     "Data will be lost.";
   }
+
+  // Using DPL?
+  mDplEnabled = (mDplChannelName != "");
 }
 
 void StfBuilderDevice::PreRun()
@@ -178,7 +181,7 @@ void StfBuilderDevice::StfOutputThread()
     if (!mStandalone) {
       // Send filtered data as two objects
       try {
-        if (!mDplEnabled) {
+        if (!dplEnabled()) {
           lStfSerializer.serialize(std::move(lStfTPC)); // TPC data
           lStfSerializer.serialize(std::move(lStfITS)); // ITS data
           lStfSerializer.serialize(std::move(lStf));    // whatever is left
@@ -196,13 +199,16 @@ void StfBuilderDevice::StfOutputThread()
       }
     }
 #else
+
+
     if (mBuildHistograms) {
       mStfSizeSamples.Fill(lStf->getDataSize());
     }
 
     if (!mStandalone) {
       try {
-        if (!mDplEnabled) {
+
+        if (!dplEnabled()) {
           lStfSerializer.serialize(std::move(lStf));
         } else {
 
