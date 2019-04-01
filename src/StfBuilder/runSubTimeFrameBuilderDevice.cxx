@@ -41,12 +41,9 @@ void addCustomOptions(bpo::options_description& options)
 
   bpo::options_description lStfBuilderDplOptions("SubTimeFrameBuilder DPL options", 120);
   lStfBuilderDplOptions.add_options()(
-    o2::DataDistribution::StfBuilderDevice::OptionKeyDpl,
-    bpo::bool_switch()->default_value(false),
-    "Enable DPL.")(
     o2::DataDistribution::StfBuilderDevice::OptionKeyDplChannelName,
     bpo::value<std::string>()->default_value("dpl-stf-channel"),
-    "Name of the dpl output channel.");
+    "Name of the dpl output channel. If empty, skip the DPL and connect to StfSender.");
 
   options.add(lStfBuilderOptions);
   options.add(lStfBuilderDplOptions);
