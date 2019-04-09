@@ -75,10 +75,17 @@ void SubTimeFrameReadoutBuilder::addHbFrames(const ReadoutSubTimeframeHeader& pH
         0
       );
 
-      // Is there another way to compose headers. Stack is heavy on malloc/free needlessly
-      auto lStack = Stack(Stack::allocator_type(mHeaderMemRes.get()), lDataHdr, lDplHeader);
+      // Is there another way to compose headers? Stack is heavy on malloc/free needlessly
+      // auto lStack = Stack(Stack::allocator_type(mHeaderMemRes.get()), lDataHdr, lDplHeader);
+      auto lStack = Stack(lDataHdr, lDplHeader);
+      lHdrMsg = mHeaderMemRes->NewFairMQMessage();
+      if (!lHdrMsg ||
+        (lHdrMsg->GetSize() < (sizeof(DataHeader) + sizeof(o2::framework::DataProcessingHeader)))) {
+        throw std::bad_alloc();
+      }
 
-      lHdrMsg = mHeaderMemRes->NewFairMQMessageFromPtr(lStack.data());
+      memcpy(lHdrMsg->GetData(), lStack.data(), lHdrMsg->GetSize());
+
     } else {
 
       lHdrMsg = mHeaderMemRes->NewFairMQMessage();

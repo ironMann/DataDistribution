@@ -64,6 +64,7 @@ public:
   }
 
   std::unique_ptr<FairMQMessage> NewFairMQMessage() {
+
     const auto lMem = allocate(0);
 
     if (lMem != nullptr) {
@@ -82,7 +83,7 @@ public:
   }
 
   std::unique_ptr<FairMQMessage> NewFairMQMessageFromPtr(void *pPtr) {
-    assert(pPtr >= mRegion->GetData() && pPtr < mRegion->GetData() + mRegion->GetSize());
+    assert(pPtr >= static_cast<byte*>(mRegion->GetData()) && pPtr < static_cast<byte*>(mRegion->GetData()) + mRegion->GetSize());
 
     return mChan.NewMessage(mRegion, pPtr, mObjectSize);
   }
