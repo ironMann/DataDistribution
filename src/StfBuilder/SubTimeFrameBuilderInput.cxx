@@ -51,7 +51,13 @@ void StfInputInterface::DataHandlerThread(const unsigned pInputChannelIdx)
 
   // Reference to the input channel
   auto& lInputChan = mDevice.GetChannel(mDevice.getInputChannelName(), pInputChannelIdx);
-  auto& lOutputChan = mDevice.GetChannel(mDevice.getOutputChannelName());
+
+  // Reference to the output or DPL channel
+  const auto &lOutChanName = mDevice.dplEnabled() ?
+    mDevice.getDplChannelName() :
+    mDevice.getOutputChannelName();
+
+  auto& lOutputChan = mDevice.GetChannel(lOutChanName);
 
   // Stf builder
   SubTimeFrameReadoutBuilder lStfBuilder(mDevice, lOutputChan, mDevice.dplEnabled());

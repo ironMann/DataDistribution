@@ -39,32 +39,37 @@ void StfDplAdapter::visit(SubTimeFrame& pStf)
     0
   );
 
-  auto lHdrStack = Stack(lStfDistDataHeader, lDplHeader);
+  {
+    auto lHdrStack = Stack(lStfDistDataHeader, lDplHeader);
 
-  auto lDataHeaderMsg = mChan.NewMessage(lHdrStack.size());
-  if (!lDataHeaderMsg) {
-    LOG(ERROR) << "Allocation error: Stf DataHeader::size: " << sizeof(DataHeader);
-    throw std::bad_alloc();
+    auto lDataHeaderMsg = mChan.NewMessage(lHdrStack.size());
+    if (!lDataHeaderMsg) {
+      LOG(ERROR) << "Allocation error: Stf DataHeader::size: " << sizeof(DataHeader);
+      throw std::bad_alloc();
+    }
+
+    std::memcpy(lDataHeaderMsg->GetData(), lHdrStack.data(), lHdrStack.size());
+
+    auto lDataMsg = mChan.NewMessage(sizeof(SubTimeFrame::Header));
+    if (!lDataMsg) {
+      LOG(ERROR) << "Allocation error: Stf::Header::size: " << sizeof(SubTimeFrame::Header);
+      throw std::bad_alloc();
+    }
+    std::memcpy(lDataMsg->GetData(), &pStf.header(), sizeof(SubTimeFrame::Header));
+
+    mMessages.emplace_back(std::move(lDataHeaderMsg));
+    mMessages.emplace_back(std::move(lDataMsg));
   }
-
-  std::memcpy(lDataHeaderMsg->GetData(), lHdrStack.data(), lHdrStack.size());
-
-  auto lDataMsg = mChan.NewMessage(sizeof(SubTimeFrame::Header));
-  if (!lDataMsg) {
-    LOG(ERROR) << "Allocation error: Stf::Header::size: " << sizeof(SubTimeFrame::Header);
-    throw std::bad_alloc();
-  }
-  std::memcpy(lDataMsg->GetData(), &pStf.header(), sizeof(SubTimeFrame::Header));
-
-  mMessages.emplace_back(std::move(lDataHeaderMsg));
-  mMessages.emplace_back(std::move(lDataMsg));
 
   for (auto& lDataIdentMapIter : pStf.mData) {
-    for (auto& lSubSpecMapIter : lDataIdentMapIter.second) {
+
+    auto &lSubSpecDataMap = lDataIdentMapIter.second;
+
+    for (auto& lSubSpecMapIter : lSubSpecDataMap) {
 
       auto & lHBFrameVector = lSubSpecMapIter.second;
 
-      for (uint64_t i = 0; lHBFrameVector.size(); i++) {
+      for (uint64_t i = 0; i < lHBFrameVector.size(); i++) {
 
         // FIXME: update the subspec field to include the element ID for DPL
         //
@@ -79,19 +84,15 @@ void StfDplAdapter::visit(SubTimeFrame& pStf)
 
         DataHeader lDataHdr;
         memcpy(&lDataHdr, lHBFrameVector[i].mHeader->GetData(), sizeof(DataHeader));
-
         lDataHdr.subSpecification = (lDataHdr.subSpecification << 32) | i;
-
         memcpy(lHBFrameVector[i].mHeader->GetData(), &lDataHdr, sizeof(DataHeader));
 
         mMessages.emplace_back(std::move(lHBFrameVector[i].mHeader));
         mMessages.emplace_back(std::move(lHBFrameVector[i].mData));
       }
+      lHBFrameVector.clear();
     }
   }
-
-  pStf.mData.clear();
-  pStf.mHeader = SubTimeFrame::Header();
 }
 
 void StfDplAdapter::sendToDpl(std::unique_ptr<SubTimeFrame>&& pStf)
@@ -103,6 +104,7 @@ void StfDplAdapter::sendToDpl(std::unique_ptr<SubTimeFrame>&& pStf)
 
   // make sure headers and chunk pointers don't linger
   mMessages.clear();
+  pStf.reset();
 }
 }
 } /* o2::DataDistribution */

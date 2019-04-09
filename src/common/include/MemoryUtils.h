@@ -64,6 +64,7 @@ public:
   }
 
   std::unique_ptr<FairMQMessage> NewFairMQMessage() {
+
     const auto lMem = allocate(0);
 
     if (lMem != nullptr) {

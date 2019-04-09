@@ -277,7 +277,6 @@ class SubTimeFrame : public IDataModelObject
 
     auto& lDataVector = mData[lDataId][pDataHeader.subSpecification];
 
-    lDataVector.reserve(512);
     lDataVector.emplace_back(std::move(pStfData));
   }
 
