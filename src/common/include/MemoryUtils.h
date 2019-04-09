@@ -141,7 +141,7 @@ private:
   void reclaimSHMMessage(void* pData, size_t pSize)
   {
     (void) pSize;
-    assert (pSize != mObjectSize);
+    assert (pSize == mObjectSize);
 
     std::scoped_lock lock(mReclaimLock);
     mReclaimedObjects.push_back(pData);

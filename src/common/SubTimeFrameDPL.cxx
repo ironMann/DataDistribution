@@ -34,10 +34,7 @@ void StfDplAdapter::visit(SubTimeFrame& pStf)
   );
   lStfDistDataHeader.payloadSerializationMethod = gSerializationMethodNone;
 
-  o2::framework::DataProcessingHeader lDplHeader(
-    pStf.header().mId, /* Stf ID */
-    0
-  );
+  o2::framework::DataProcessingHeader lDplHeader(pStf.header().mId);
 
   {
     auto lHdrStack = Stack(lStfDistDataHeader, lDplHeader);
@@ -71,21 +68,14 @@ void StfDplAdapter::visit(SubTimeFrame& pStf)
 
       for (uint64_t i = 0; i < lHBFrameVector.size(); i++) {
 
-        // FIXME: update the subspec field to include the element ID for DPL
-        //
-        // DPL tuple (origin, description, data subspecification, timestamp)
-        //
         // O2 messages belonging to a single STF:
-        //  - timestamp is always STF ID
-        //  - (origin, description) can repeat in multiple messages
-        //  - (origin, description, subspecification & 0xFFFFFFFF00000000) can also repeat
-        //  - (origin, description, subspecification) is unique
-        //
+        //  - DataProcessingHeader::startTime == STF ID
+        //  - DataHeader(origin, description, subspecification) can repeat
+        //  - DataHeader(origin, description, subspecification, splitPayloadIndex) is unique
 
-        DataHeader lDataHdr;
-        memcpy(&lDataHdr, lHBFrameVector[i].mHeader->GetData(), sizeof(DataHeader));
-        lDataHdr.subSpecification = (lDataHdr.subSpecification << 32) | i;
-        memcpy(lHBFrameVector[i].mHeader->GetData(), &lDataHdr, sizeof(DataHeader));
+        assert(lHBFrameVector[i].getDataHeader().splitPayloadIndex == i);
+        assert(lHBFrameVector[i].getDataHeader().splitPayloadParts == lHBFrameVector.size());
+
 
         mMessages.emplace_back(std::move(lHBFrameVector[i].mHeader));
         mMessages.emplace_back(std::move(lHBFrameVector[i].mData));

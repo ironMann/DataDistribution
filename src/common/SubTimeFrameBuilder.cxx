@@ -70,10 +70,7 @@ void SubTimeFrameReadoutBuilder::addHbFrames(const ReadoutSubTimeframeHeader& pH
     lDataHdr.payloadSerializationMethod = gSerializationMethodNone;
 
     if (mDplEnabled) {
-      o2::framework::DataProcessingHeader lDplHeader(
-        mStf->header().mId, /* Stf ID */
-        0
-      );
+      o2::framework::DataProcessingHeader lDplHeader(mStf->header().mId);
 
       // Is there another way to compose headers? Stack is heavy on malloc/free needlessly
       // auto lStack = Stack(Stack::allocator_type(mHeaderMemRes.get()), lDataHdr, lDplHeader);
